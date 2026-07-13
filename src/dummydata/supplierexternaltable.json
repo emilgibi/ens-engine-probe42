@@ -1,0 +1,92 @@
+{
+    "status": 200,
+    "NAME": "Global Corp Ltd",
+    "COUNTRY": "USA",
+    "CITY_STANDARDIZED": "New York",
+    "ADDRESS_LINE1": "123 Corporate Ave, New York, NY 10001",
+    "is_active": "Yes",
+    "operation_type": "Manufacturing",
+    "STANDARDISED_LEGAL_FORM": "Limited Liability Company",
+    "BVD_ID_NUMBER": "BVD123456",
+    "NATIONAL_ID_TYPE": "Tax ID",
+    "NATIONAL_ID": "123-45-6789",
+    "AKA_NAME": "GCL",
+    "INCORPORATION_DATE": "2005-03-15",
+    "SUB_COUNT": 15,
+    "CORPORATE_GROUP_SIZE_LABEL": 100,
+    "SH_COUNT": 5,
+    "OPRE": 50000.50,
+    "PL": 2500.75,
+    "debt_to_equity_ratio": 21434.45,
+    "EBTA": 7500.00,
+    "CURR": 1.34,
+    "ROE": 0.24,
+    "pl_date": "2024-12-31",
+    "MODEFINNF": "A",
+    "MORRAT": "050",
+    "REACMORRAT": "070",
+    "MODEFINNFDATE": "2024-01-15",
+    "pr_more_risk_score_date": "2024-02-20",
+    "pr_reactive_more_risk_score_date": "2024-03-10",
+    "Grid_Events": [
+        {
+            "type": "MER",
+            "description": "Merged with ABC Corp",
+            "date": "2024-07-01"
+        },
+        {
+            "type": "PEP",
+            "description": "on BVD list",
+            "date": "2023-02-04"
+        }
+    ],
+    "ESG_GLOBAL_SCORE": 7.5,
+    "ESG_GLOBAL_SCORE_CLASS": "MEDIUM",
+    "ESG_ENV_SCORE": 8.2,
+    "ESG_SOC_SCORE": 7.5,
+    "ESG_GOV_SCORE": 6.7,
+    "esg_date": "2024-08-01",
+    "BITSIGHT_SECURITY_RATING": 8.7,
+    "BITSIGHT_VECTOR_BOTNET_INFECTIONS": "A",
+    "BITSIGHT_VECTOR_MALWARE_SERVERS": "B",
+    "BITSIGHT_VECTOR_TLS_SSL_CERTIFICATES": "C",
+    "BITSIGHT_VECTOR_WEB_APPLICATION_HEADERS": "A",
+    "BITSIGHT_UPDATED_DATE": "2024-06-15",
+    "IMPLIED_CYBER_THREAT_RISK_METRIC": "Moderate",
+    "IMPLIED_CYBER_THREAT_DATE": "2024-06-15",
+    "BO_NAME": ["John Doe", "Jane Smith"],
+    "GUO_NAME": ["Global Corp", "Tech Holdings"],
+    "GUO_DIRECT_PCT": [70, 30],
+    "GUO_TOTAL_PCT": [100, 100],
+    "SH_NAME": ["Alice Brown", "Bob Green"],
+    "SH_DIRECT_PCT": [60, 40],
+    "SH_TOTAL_PCT": [100, 100],
+    "CSH_NAME": ["Charlie White", "David Black"],
+    "CSH_DIRECT_PCT": [45, 55],
+    "CSH_TOTAL_PCT": [100, 100],
+    "SUB_NAME": ["SubCorp A", "SubCorp B"],
+    "SUB_DIRECT_PCT": [80, 90],
+    "SUB_TOTAL_PCT": [100, 100],
+    "beneficial_owners": [
+        {"entity": "BLACKROCK FINANCE, INC", "direct": 20},
+        {"entity": "QATAR INVESTMENT AUTHORITY", "direct": 30}
+        ],
+    "global_ultimate_owner":[
+        {"entity": "BLACKROCK FINANCE, INC", "direct": 20},
+        {"entity": "QATAR INVESTMENT AUTHORITY", "direct": 30}
+        ],
+    "shareholders": [
+        {"entity": "BLACKROCK FINANCE, INC", "direct": 20},
+        {"entity": "PETROVICH", "direct": 19}
+        ],
+    "ultimately_owned_subsidiaries":[
+        {"entity": "BLACKROCK FINANCE, INC", "direct": 20},
+        {"entity": "ABC TRAVELS", "direct": 12}
+    ],
+    "ultimate_beneficiary_owner":[
+        {"entity": "SIEMENS", "direct": 60}
+        ],
+    "other_ultimate_beneficiary": [],
+    "ens_id": 123
+  }
+  
