@@ -247,11 +247,11 @@ const noAnnexure = () => createNoHitsTable('NO ANNEXURE');
 //    Row 3:            content                gridSpan=4
 // ═══════════════════════════════════════════════════════════════════════════════
 function makeKpiBlock(kpi, contentChildren, sectionTitle = null) {
-  // ── ONE outer row, ONE outer cell ─────────────────────────────────────────
-  // cantSplit on the single outer row prevents Word from splitting the KPI
-  // header from its content for short/medium tables.
-  // For tables that span more than one page, the content cell itself will
-  // still split — that is physically unavoidable in any word-processor.
+  // ── Header is its own small, cantSplit table (always fits — anti-orphan) ──
+  // Content is returned as plain top-level elements (NOT wrapped in an outer
+  // cantSplit table), so large findings (e.g. Legal History with many case
+  // rows) can flow/split across pages naturally instead of forcing the
+  // entire header+content block onto the next page when it doesn't fit.
   // ──────────────────────────────────────────────────────────────────────────
 
   // KPI header as a nested 4-column table (column widths are DXA and match
@@ -268,7 +268,7 @@ function makeKpiBlock(kpi, contentChildren, sectionTitle = null) {
     ]})]
   });
 
-  return new Table({
+  const headerTable = new Table({
     width: { size: TBL_W, type: WidthType.DXA },
     columnWidths: [TBL_W],
     borders: allBorders,
@@ -295,12 +295,12 @@ function makeKpiBlock(kpi, contentChildren, sectionTitle = null) {
             spacing: { before: 0, after: 0 },
             children: [new TextRun({ text: 'Findings', bold: true, size: 19, color: C.white })]
           }),
-          // Content
-          ...contentChildren
         ]
       })]
     })]
   });
+
+  return [headerTable, ...contentChildren];
 }
 
 // ─── renderVal — module-level so it's available everywhere ──────────────────
@@ -529,7 +529,7 @@ function createLegalHistoryTable(findings) {
       ]
     : [new Paragraph({}), new Paragraph({ children: [new TextRun({ text: 'No legal cases identified.', italics: true })] }), new Paragraph({})];
 
-  return [makeKpiBlock(findings, contentChildren), new Paragraph({})];
+  return [...makeKpiBlock(findings, contentChildren), new Paragraph({})];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -545,7 +545,7 @@ function createFindingsTable(findings) {
     new Paragraph({})
   ].filter(Boolean);
 
-  return [makeKpiBlock(findings, content), new Paragraph({})];
+  return [...makeKpiBlock(findings, content), new Paragraph({})];
 }
 
 // ─── EPFO row reorder (FSTB13A only) ──────────────────────────────────────────
@@ -593,7 +593,7 @@ function createRelationTable(findings) {
         new Paragraph({})
       ].filter(Boolean);
 
-  return [makeKpiBlock(findings, content), new Paragraph({})];
+  return [...makeKpiBlock(findings, content), new Paragraph({})];
 }
 
 // ─── Inner indicator table (ESG / Cyber) ─────────────────────────────────────
@@ -627,12 +627,28 @@ function createFindingsInnerTable(findings) {
     new Paragraph({})
   ].filter(Boolean);
 
-  return [makeKpiBlock(findings, content), new Paragraph({})];
+  return [...makeKpiBlock(findings, content), new Paragraph({})];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  FINANCIAL SUMMARY — P&L + Balance Sheet tables (slide-24 style)
 // ═══════════════════════════════════════════════════════════════════════════════
+// ─── Page break helper (for independent-page subsections) ────────────────────
+const pageBreak = () => new Paragraph({ pageBreakBefore: true });
+
+// Joins an array of "chunks" (each chunk = an array of docx elements for one
+// subsection) into a flat element list, inserting a page break before every
+// chunk EXCEPT the first — so the first subsection can share its page with
+// the section's intro/header text, while every later subsection starts fresh.
+function withPageBreaks(chunks) {
+  const out = [];
+  chunks.filter(c => c && c.length).forEach((chunk, i) => {
+    if (i > 0) out.push(pageBreak());
+    out.push(...chunk);
+  });
+  return out;
+}
+
 function createFinancialSummarySection(plKpi, bsKpi) {
   const parse = (k) => { try { return JSON.parse(k?.kpi_details ?? '[]'); } catch { return []; } };
   const plData = parse(plKpi), bsData = parse(bsKpi);
@@ -674,30 +690,31 @@ function createFinancialSummarySection(plKpi, bsKpi) {
     });
   };
 
-  // Each summary KPI wrapped in makeKpiBlock so the rating (e.g. INFO) is visible
-  const blocks = [];
+  // Each summary KPI wrapped in makeKpiBlock so the rating (e.g. INFO) is visible.
+  // Returned as separate chunks (one per subsection) — caller decides page breaks.
+  const chunks = [];
 
   if (plKpi) {
     const plTable = makeFinTable(plData, 'Income Statement  (₹ in Lakhs)');
     if (plTable) {
-      blocks.push(
-        makeKpiBlock(plKpi, [new Paragraph({}), plTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
+      chunks.push([
+        ...makeKpiBlock(plKpi, [new Paragraph({}), plTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
         new Paragraph({})
-      );
+      ]);
     }
   }
 
   if (bsKpi) {
     const bsTable = makeFinTable(bsData, 'Balance Sheet  (₹ in Lakhs)');
     if (bsTable) {
-      blocks.push(
-        makeKpiBlock(bsKpi, [new Paragraph({}), bsTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
+      chunks.push([
+        ...makeKpiBlock(bsKpi, [new Paragraph({}), bsTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
         new Paragraph({})
-      );
+      ]);
     }
   }
 
-  return blocks;
+  return chunks;
 }
 
 // ─── Chart data table (below every chart) ────────────────────────────────────
@@ -857,12 +874,12 @@ function createFinancialChartSection(kpi, sectionTitle, chartsForKpi) {
 
 // ─── Master financial section ─────────────────────────────────────────────────
 function createFinancialFindingsSection(financialData) {
-  const result = [];
+  const chunks = [];
 
   const plKpi = financialData.find(k => k.kpi_code==='FSTB3A');
   const bsKpi = financialData.find(k => k.kpi_code==='FSTB2A');
   if (plKpi || bsKpi) {
-    result.push(...createFinancialSummarySection(plKpi, bsKpi));
+    chunks.push(...createFinancialSummarySection(plKpi, bsKpi)); // already an array of chunks
   }
 
   const CHART_ORDER = [
@@ -873,14 +890,15 @@ function createFinancialFindingsSection(financialData) {
   ];
   for (const { code, title } of CHART_ORDER) {
     const kpi = financialData.find(k => k.kpi_code===code);
-    if (kpi) result.push(...createFinancialChartSection(kpi, title, chartBuffers[code]));
+    if (kpi) chunks.push(createFinancialChartSection(kpi, title, chartBuffers[code]));
   }
 
   const rendered = new Set(['FSTB3A','FSTB2A','FSTB1B','FSTB1C','FSTB1D','FSTB1E']);
   for (const kpi of financialData) {
-    if (!rendered.has(kpi.kpi_code)) result.push(...createRelationTable(kpi));
+    if (!rendered.has(kpi.kpi_code)) chunks.push(createRelationTable(kpi));
   }
-  return result;
+
+  return withPageBreaks(chunks);
 }
 
 // ─── Executive Summary (OpenAI) ────────────────────────────────────────────────
@@ -1357,15 +1375,15 @@ export const generateReport = async (payload) => {
         ...(!disableReg && {
           g_rating: highlightRating(data.riskData[6]?.rating ?? 'Low'),
           regularity_findings: { type:PatchType.DOCUMENT,
-            children: data.reg_findings ? data.reg_data.map(createFindingsTable).flat() : createNoHitsTable('REGULATORY') },
+            children: data.reg_findings ? withPageBreaks(data.reg_data.map(createFindingsTable)) : createNoHitsTable('REGULATORY') },
         }),
 
         page_break: { type:PatchType.DOCUMENT, children:[new Paragraph({pageBreakBefore:true})] },
 
         legal_findings: { type:PatchType.DOCUMENT,
           children: payload.legal_findings
-            ? data.legal_data.map(f => (f.kpi_code==='LEG1A'||/legal history/i.test(f.kpi_definition||''))
-                ? createLegalHistoryTable(f) : createRelationTable(f)).flat()
+            ? withPageBreaks(data.legal_data.map(f => (f.kpi_code==='LEG1A'||/legal history/i.test(f.kpi_definition||''))
+                ? createLegalHistoryTable(f) : createRelationTable(f)))
             : createNoHitsTable('LEGAL')
         },
 
@@ -1377,21 +1395,21 @@ export const generateReport = async (payload) => {
 
         cyber_esg_findings: { type:PatchType.DOCUMENT,
           children: payload.cyber_esg_findings
-            ? data.cyber_esg_data.map(createRelationTable).flat()
+            ? withPageBreaks(data.cyber_esg_data.map(createRelationTable))
             : createNoHitsTable('CYBER')
         },
 
         adverse_media_findings: { type:PatchType.DOCUMENT,
           children: payload.adverse_media_findings
-            ? data.adverse_media_data.map(createFindingsTable).flat()
+            ? withPageBreaks(data.adverse_media_data.map(createFindingsTable))
             : createNoHitsTable('ADVERSE MEDIA')
         },
 
         entity_existence_findings: { type:PatchType.DOCUMENT,
-          children: [
-            ...(payload.entity_existence_findings ? data.entity_existence_data.map(createRelationTable).flat() : createNoHitsTable('ENTITY EXISTENCE')),
-            ...(await createAddressValidationTable(data.google_image_name))
-          ]
+          children: withPageBreaks([
+            ...(payload.entity_existence_findings ? data.entity_existence_data.map(createRelationTable) : [createNoHitsTable('ENTITY EXISTENCE')]),
+            await createAddressValidationTable(data.google_image_name)
+          ])
         },
 
         annexure: { type:PatchType.DOCUMENT,
