@@ -53,15 +53,21 @@ const {
   AZURE_STORAGE_ACCOUNT_NAME,
   REPORTS_CONTAINER_NAME,
   REPORTS_SAS_TOKEN,
+  AZURE_OPENAI_ENDPOINT,      // e.g. https://your-resource-name.openai.azure.com
+  AZURE_OPENAI_API_KEY,
+  AZURE_OPENAI_DEPLOYMENT,    // deployment name, NOT the underlying model name
+  AZURE_OPENAI_API_VERSION,
 } = process.env;
 
+const AZURE_API_VERSION = AZURE_OPENAI_API_VERSION || '2024-06-01'; // verified working against gpt-5 deployment
+
 const _sasToken = REPORTS_SAS_TOKEN
-    ? (REPORTS_SAS_TOKEN.startsWith('?') ? REPORTS_SAS_TOKEN : `?${REPORTS_SAS_TOKEN}`)
-    : '';
+  ? (REPORTS_SAS_TOKEN.startsWith('?') ? REPORTS_SAS_TOKEN : `?${REPORTS_SAS_TOKEN}`)
+  : '';
 
 const reportContainerUrl = AZURE_STORAGE_ACCOUNT_NAME && REPORTS_CONTAINER_NAME
-    ? `https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${REPORTS_CONTAINER_NAME}${_sasToken}`
-    : null;
+  ? `https://${AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${REPORTS_CONTAINER_NAME}${_sasToken}`
+  : null;
 
 const reportContainerClient = reportContainerUrl ? new ContainerClient(reportContainerUrl) : null;
 
@@ -141,8 +147,8 @@ const ratingStyle = (rating) => {
 // ─── Utils ────────────────────────────────────────────────────────────────────
 function safeText(v = '') {
   return String(v)
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // ─── Cell factory ─────────────────────────────────────────────────────────────
@@ -166,24 +172,24 @@ const mkCell = (text, {
     borders: allBorders,
     ...(widthDxa ? { width: { size: widthDxa, type: WidthType.DXA } } : {}),
     children: String(text ?? '').split(/\n+/).map(t =>
-        new Paragraph({
-          alignment: align,
-          spacing: { before: 20, after: 20 },
-          children: [new TextRun({ text: safeText(t), bold, size: fontSize, color })]
-        })
+      new Paragraph({
+        alignment: align,
+        spacing: { before: 20, after: 20 },
+        children: [new TextRun({ text: safeText(t), bold, size: fontSize, color })]
+      })
     )
   });
 };
 
 // ─── Source line ──────────────────────────────────────────────────────────────
 const sourceLine = (src = 'EY Network Alliance Databases') =>
-    new Paragraph({
-      spacing: { before: 80, after: 80 },
-      children: [
-        new TextRun({ text: 'Source: ', bold: true, size: 18 }),
-        new TextRun({ text: src, size: 18 })
-      ]
-    });
+  new Paragraph({
+    spacing: { before: 80, after: 80 },
+    children: [
+      new TextRun({ text: 'Source: ', bold: true, size: 18 }),
+      new TextRun({ text: src, size: 18 })
+    ]
+  });
 
 // ─── Rating patch ─────────────────────────────────────────────────────────────
 const highlightRating = (rating) => ({
@@ -192,14 +198,14 @@ const highlightRating = (rating) => ({
     width: { size: 15, type: WidthType.PERCENTAGE },
     borders: noBorders,
     rows: [new TableRow({ height: { rule: 'atLeast', value: 550 }, children: [
-        new TableCell({
-          verticalAlign: 'center',
-          shading: { fill: getRiskColor(rating).background, type: ShadingType.CLEAR },
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [
-              new TextRun({ text: `${rating}`, color: getRiskColor(rating).color, bold: true })
-            ]})]
-        })
-      ]})]
+      new TableCell({
+        verticalAlign: 'center',
+        shading: { fill: getRiskColor(rating).background, type: ShadingType.CLEAR },
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [
+          new TextRun({ text: `${rating}`, color: getRiskColor(rating).color, bold: true })
+        ]})]
+      })
+    ]})]
   })]
 });
 
@@ -215,15 +221,15 @@ const createNoHitsTable = (text = '') => [
     columnWidths: [TBL_W],
     borders: allBorders,
     rows: [new TableRow({ height: { rule: 'atLeast', value: 500 }, children: [
-        new TableCell({
-          verticalAlign: 'center',
-          shading: { fill: C.offWhite, type: ShadingType.CLEAR },
-          borders: allBorders,
-          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [
-              new TextRun({ text: text ? `${text} – NO TRUE HITS IDENTIFIED` : 'NO TRUE HITS IDENTIFIED', bold: true, size: 20 })
-            ]})]
-        })
-      ]})]
+      new TableCell({
+        verticalAlign: 'center',
+        shading: { fill: C.offWhite, type: ShadingType.CLEAR },
+        borders: allBorders,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [
+          new TextRun({ text: text ? `${text} – NO TRUE HITS IDENTIFIED` : 'NO TRUE HITS IDENTIFIED', bold: true, size: 20 })
+        ]})]
+      })
+    ]})]
   }),
   new Paragraph({})
 ];
@@ -255,11 +261,11 @@ function makeKpiBlock(kpi, contentChildren, sectionTitle = null) {
     columnWidths: COL,
     borders: allBorders,
     rows: [new TableRow({ cantSplit: true, children: [
-        mkCell('Name & Relation', { bg: C.navy, color: C.white, bold: true, widthDxa: COL[0] }),
-        mkCell(kpi.kpi_definition, { bg: C.offWhite, align: AlignmentType.CENTER, widthDxa: COL[1] }),
-        mkCell('Rating',           { bg: C.navy, color: C.white, bold: true, align: AlignmentType.CENTER, widthDxa: COL[2] }),
-        mkCell(kpi.kpi_rating,     { bg: ratingStyle(kpi.kpi_rating).background, color: ratingStyle(kpi.kpi_rating).color, bold: true, align: AlignmentType.CENTER, widthDxa: COL[3] }),
-      ]})]
+      mkCell('Name & Relation', { bg: C.navy, color: C.white, bold: true, widthDxa: COL[0] }),
+      mkCell(kpi.kpi_definition, { bg: C.offWhite, align: AlignmentType.CENTER, widthDxa: COL[1] }),
+      mkCell('Rating',           { bg: C.navy, color: C.white, bold: true, align: AlignmentType.CENTER, widthDxa: COL[2] }),
+      mkCell(kpi.kpi_rating,     { bg: ratingStyle(kpi.kpi_rating).background, color: ratingStyle(kpi.kpi_rating).color, bold: true, align: AlignmentType.CENTER, widthDxa: COL[3] }),
+    ]})]
   });
 
   return new Table({
@@ -331,21 +337,21 @@ function makeJsonTable(data) {
     const SKIP = new Set(['score']);   // suppress noisy numeric noise fields
     const toLabel = k => k.replace(/_/g,' ').replace(/([A-Z])/g,' $1').trim().replace(/\b\w/g,m=>m.toUpperCase());
     const fvRows = Object.entries(data)
-        .filter(([k]) => !SKIP.has(k))
-        .map(([k, v]) => ({ factor: toLabel(k), value: v }));
+      .filter(([k]) => !SKIP.has(k))
+      .map(([k, v]) => ({ factor: toLabel(k), value: v }));
     // Re-enter as 2-column table
     const fvW = [40, 60];
     return new Table({
       width: { size: 100, type: WidthType.PERCENTAGE }, borders: allBorders,
       rows: [
         new TableRow({ cantSplit: true, children: [
-            new TableCell({ width:{size:fvW[0],type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Parameter',bold:true,color:C.white,size:18})]})] }),
-            new TableCell({ width:{size:fvW[1],type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Value',bold:true,color:C.white,size:18})]})] }),
-          ]}),
+          new TableCell({ width:{size:fvW[0],type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Parameter',bold:true,color:C.white,size:18})]})] }),
+          new TableCell({ width:{size:fvW[1],type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Value',bold:true,color:C.white,size:18})]})] }),
+        ]}),
         ...fvRows.map((r, i) => new TableRow({ children: [
-            new TableCell({ width:{size:fvW[0],type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(r.factor),bold:true,size:17})]})] }),
-            new TableCell({ width:{size:fvW[1],type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children: renderVal(r.value) }),
-          ]}))
+          new TableCell({ width:{size:fvW[0],type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(r.factor),bold:true,size:17})]})] }),
+          new TableCell({ width:{size:fvW[1],type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children: renderVal(r.value) }),
+        ]}))
       ]
     });
   }
@@ -370,21 +376,21 @@ function makeJsonTable(data) {
     borders: allBorders,
     rows: [
       new TableRow({ cantSplit: true, children: cols.map((c, i) =>
-            new TableCell({
-              width: { size: i < cols.length-1 ? cw : lastCw, type: WidthType.PERCENTAGE },
-              shading: { fill: C.navy, type: ShadingType.CLEAR },
-              borders: allBorders, margins: { top: 60, bottom: 60, left: 110, right: 110 },
-              children: [new Paragraph({ children: [new TextRun({ text: toTitle(c), bold: true, color: C.white, size: 18 })] })]
-            })
-        )}),
+        new TableCell({
+          width: { size: i < cols.length-1 ? cw : lastCw, type: WidthType.PERCENTAGE },
+          shading: { fill: C.navy, type: ShadingType.CLEAR },
+          borders: allBorders, margins: { top: 60, bottom: 60, left: 110, right: 110 },
+          children: [new Paragraph({ children: [new TextRun({ text: toTitle(c), bold: true, color: C.white, size: 18 })] })]
+        })
+      )}),
       ...rows.map((r, i) => new TableRow({ children: cols.map((c, ci) =>
-            new TableCell({
-              width: { size: ci < cols.length-1 ? cw : lastCw, type: WidthType.PERCENTAGE },
-              shading: { fill: i%2===0 ? C.offWhite : C.white, type: ShadingType.CLEAR },
-              borders: allBorders, margins: { top: 55, bottom: 55, left: 110, right: 110 },
-              children: renderVal(r?.[c])
-            })
-        )}))
+        new TableCell({
+          width: { size: ci < cols.length-1 ? cw : lastCw, type: WidthType.PERCENTAGE },
+          shading: { fill: i%2===0 ? C.offWhite : C.white, type: ShadingType.CLEAR },
+          borders: allBorders, margins: { top: 55, bottom: 55, left: 110, right: 110 },
+          children: renderVal(r?.[c])
+        })
+      )}))
     ]
   });
 }
@@ -394,7 +400,7 @@ function tryParseJson(s) {
   if (!s || !['[','{'].includes(String(s).trim()[0])) return null;
   try {
     return JSON.parse(
-        String(s).replace(/&quot;|&#34;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+      String(s).replace(/&quot;|&#34;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
     );
   } catch { return null; }
 }
@@ -407,14 +413,14 @@ function urlPara(text) {
   if (url) { after = text.replace(/.*https?:\/\/[^\s]+/, '').trim(); }
   if (url && url.includes('?')) url = null;
   return new Paragraph({ spacing: { after: 50, before: 50 }, children: [url
-        ? new ExternalHyperlink({ link: url, children: [
-            new TextRun({ text: '', break: 1 }), new TextRun({ text: 'Source:', bold: true }),
-            new TextRun({ text: '', break: 1 }),
-            new TextRun({ text: links.find(l=>l.url===url)?.title ?? 'Source Link', style: 'Hyperlink' }),
-            new TextRun({ text: ` ${after}` }), new TextRun({ text: '', break: 1 })
-          ]})
-        : new TextRun({ text, bold: false })
-    ]});
+    ? new ExternalHyperlink({ link: url, children: [
+        new TextRun({ text: '', break: 1 }), new TextRun({ text: 'Source:', bold: true }),
+        new TextRun({ text: '', break: 1 }),
+        new TextRun({ text: links.find(l=>l.url===url)?.title ?? 'Source Link', style: 'Hyperlink' }),
+        new TextRun({ text: ` ${after}` }), new TextRun({ text: '', break: 1 })
+      ]})
+    : new TextRun({ text, bold: false })
+  ]});
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -466,7 +472,7 @@ function createLegalHistoryTable(findings) {
   const cases = parseLegalCases(findings.kpi_details);
 
   const contentChildren = cases.length
-      ? [
+    ? [
         new Paragraph({}),
         (() => {
           // Columns: Sr(5) Date(8) Case No.(14) Description(44) Category(12) Severity(9) Status(8)
@@ -484,13 +490,13 @@ function createLegalHistoryTable(findings) {
             rows: [
               // Header
               new TableRow({ cantSplit: true, children: LABELS.map((l,i) =>
-                    new TableCell({
-                      width: { size: LCOLS[i], type: WidthType.PERCENTAGE },
-                      shading: { fill: C.navy, type: ShadingType.CLEAR },
-                      borders: allBorders, margins: { top:60, bottom:60, left:80, right:80 },
-                      children: [new Paragraph({ alignment: ALIGNS[i], children: [new TextRun({ text:l, bold:true, color:C.white, size:17 })] })]
-                    })
-                )}),
+                new TableCell({
+                  width: { size: LCOLS[i], type: WidthType.PERCENTAGE },
+                  shading: { fill: C.navy, type: ShadingType.CLEAR },
+                  borders: allBorders, margins: { top:60, bottom:60, left:80, right:80 },
+                  children: [new Paragraph({ alignment: ALIGNS[i], children: [new TextRun({ text:l, bold:true, color:C.white, size:17 })] })]
+                })
+              )}),
               // Data rows
               ...cases.map((c, i) => {
                 const sev = sevStyle(c.severity);
@@ -501,18 +507,18 @@ function createLegalHistoryTable(findings) {
                   shading: { fill: override.bg ?? bg, type: ShadingType.CLEAR },
                   borders: allBorders, margins: { top:55, bottom:55, left:80, right:80 },
                   children: [new Paragraph({ alignment: ALIGNS[colIdx], children: [
-                      new TextRun({ text: safeText(String(txt)), bold: override.bold ?? false, color: override.fg ?? '000000', size: 17 })
-                    ]})]
+                    new TextRun({ text: safeText(String(txt)), bold: override.bold ?? false, color: override.fg ?? '000000', size: 17 })
+                  ]})]
                 });
                 return new TableRow({ children: [
-                    cell(c.no,           0),
-                    cell(c.date,         1),
-                    cell(c.caseNo,       2),
-                    cell(c.description,  3),   // ← Description (wide)
-                    cell(c.category,     4),
-                    cell(cap(c.severity),5, { bg: sev.bg, fg: sev.fg, bold: true }),
-                    cell(cap(c.status),  6, { bg: sta.bg, fg: sta.fg, bold: true }),
-                  ]});
+                  cell(c.no,           0),
+                  cell(c.date,         1),
+                  cell(c.caseNo,       2),
+                  cell(c.description,  3),   // ← Description (wide)
+                  cell(c.category,     4),
+                  cell(cap(c.severity),5, { bg: sev.bg, fg: sev.fg, bold: true }),
+                  cell(cap(c.status),  6, { bg: sta.bg, fg: sta.fg, bold: true }),
+                ]});
               })
             ]
           });
@@ -521,7 +527,7 @@ function createLegalHistoryTable(findings) {
         sourceLine(),
         new Paragraph({})
       ]
-      : [new Paragraph({}), new Paragraph({ children: [new TextRun({ text: 'No legal cases identified.', italics: true })] }), new Paragraph({})];
+    : [new Paragraph({}), new Paragraph({ children: [new TextRun({ text: 'No legal cases identified.', italics: true })] }), new Paragraph({})];
 
   return [makeKpiBlock(findings, contentChildren), new Paragraph({})];
 }
@@ -542,16 +548,44 @@ function createFindingsTable(findings) {
   return [makeKpiBlock(findings, content), new Paragraph({})];
 }
 
+// ─── EPFO row reorder (FSTB13A only) ──────────────────────────────────────────
+// kpi_details for FSTB13A is a flat [{Parameter, Value}, ...] list built by the
+// backend's epfo_analysis() from entry.items() in raw JSONB order. Row order is
+// never touched by makeJsonTable (only column order is), so we reorder here:
+// Establishment ID, Address, No. of Employees, Working EPFO Payment Amount,
+// Payment Timeliness first (in that order), everything else after, unchanged.
+const EPFO_PRIORITY = [
+  /establishment.*id/i,
+  /^address$/i,
+  /no.*of.*employee|employee/i,
+  /payment.*amount|amount.*payment/i,
+  /timeliness/i,
+];
+
+function reorderEpfoRows(rows) {
+  if (!Array.isArray(rows)) return rows;
+  const rest = [...rows];
+  const matched = [];
+  for (const pattern of EPFO_PRIORITY) {
+    const idx = rest.findIndex(r => pattern.test(String(r?.Parameter ?? '')));
+    if (idx !== -1) matched.push(...rest.splice(idx, 1));
+  }
+  return [...matched, ...rest];
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 //  RELATION TABLE — JSON or text-based KPIs
 // ═══════════════════════════════════════════════════════════════════════════════
 function createRelationTable(findings) {
-  const parsed = tryParseJson(findings?.kpi_details);
+  let parsed = tryParseJson(findings?.kpi_details);
+  if (findings?.kpi_code === 'FSTB13A' && Array.isArray(parsed)) {
+    parsed = reorderEpfoRows(parsed);
+  }
   const jt     = parsed ? makeJsonTable(parsed) : null;
 
   const content = jt
-      ? [new Paragraph({}), jt, new Paragraph({}), !kpi_codes.includes(findings.kpi_code) && sourceLine(), new Paragraph({})].filter(Boolean)
-      : [
+    ? [new Paragraph({}), jt, new Paragraph({}), !kpi_codes.includes(findings.kpi_code) && sourceLine(), new Paragraph({})].filter(Boolean)
+    : [
         new Paragraph({}),
         ...(findings.kpi_details||'').trim().split(/\n+/).map(urlPara),
         new Paragraph({}),
@@ -572,18 +606,18 @@ function createFindingsInnerTable(findings) {
       width: { size: TBL_W, type: WidthType.DXA }, columnWidths: iCols, borders: allBorders,
       rows: [
         new TableRow({ cantSplit: true, children: [
-            new TableCell({ width:{size:iCols[0],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
-              children:[new Paragraph({children:[new TextRun({text:findings.inner_title,bold:true,color:C.white,size:18})]})] }),
-            new TableCell({ width:{size:iCols[1],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
-              children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Rating',bold:true,color:C.white,size:18})]})] }),
-            new TableCell({ width:{size:iCols[2],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
-              children:[new Paragraph({children:[new TextRun({text:'Notes',bold:true,color:C.white,size:18})]})] }),
-          ]}),
+          new TableCell({ width:{size:iCols[0],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
+            children:[new Paragraph({children:[new TextRun({text:findings.inner_title,bold:true,color:C.white,size:18})]})] }),
+          new TableCell({ width:{size:iCols[1],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
+            children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Rating',bold:true,color:C.white,size:18})]})] }),
+          new TableCell({ width:{size:iCols[2],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
+            children:[new Paragraph({children:[new TextRun({text:'Notes',bold:true,color:C.white,size:18})]})] }),
+        ]}),
         ...items.map((item,i) => new TableRow({ children: [
-            new TableCell({ width:{size:iCols[0],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(item.kpi_definition),size:18})]})] }),
-            new TableCell({ width:{size:iCols[1],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(item.kpi_rating),size:18})]})] }),
-            new TableCell({ width:{size:iCols[2],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(item.kpi_details),size:18})]})] }),
-          ]}))
+          new TableCell({ width:{size:iCols[0],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(item.kpi_definition),size:18})]})] }),
+          new TableCell({ width:{size:iCols[1],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(item.kpi_rating),size:18})]})] }),
+          new TableCell({ width:{size:iCols[2],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(item.kpi_details),size:18})]})] }),
+        ]}))
       ]
     }),
     new Paragraph({}),
@@ -619,22 +653,22 @@ function createFinancialSummarySection(plKpi, bsKpi) {
       rows: [
         // Yellow title row
         new TableRow({ cantSplit: true, children: [new TableCell({
-            columnSpan: nCols, shading: { fill: C.yellow, type: ShadingType.CLEAR },
-            borders: allBorders, margins: { top:80, bottom:80, left:140, right:80 },
-            children: [new Paragraph({ keepNext: true, children: [new TextRun({ text: title, bold: true, size: 22, color: '2E2E38' })] })]
-          })] }),
+          columnSpan: nCols, shading: { fill: C.yellow, type: ShadingType.CLEAR },
+          borders: allBorders, margins: { top:80, bottom:80, left:140, right:80 },
+          children: [new Paragraph({ keepNext: true, children: [new TextRun({ text: title, bold: true, size: 22, color: '2E2E38' })] })]
+        })] }),
         // Navy column headers
         new TableRow({ cantSplit: true, children: [
-            new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Particulars',bold:true,color:C.white,size:18})]})] }),
-            ...years.map((y,i) => new TableCell({ width:{size:i<years.length-1?dataPct:lastDataPct,type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:y,bold:true,color:C.white,size:18})]})] }))
-          ]}),
+          new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Particulars',bold:true,color:C.white,size:18})]})] }),
+          ...years.map((y,i) => new TableCell({ width:{size:i<years.length-1?dataPct:lastDataPct,type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:y,bold:true,color:C.white,size:18})]})] }))
+        ]}),
         // Data rows
         ...rows.map((row, i) => {
           const isTot = (row.factor||'').toLowerCase().includes('total');
           return new TableRow({ children: [
-              new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(row.factor||'—'),bold:isTot,size:17})]})] }),
-              ...years.map((y,ci) => new TableCell({ width:{size:ci<years.length-1?dataPct:lastDataPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:row[y]!==undefined?new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(row[y]):'—',bold:isTot,size:17})]})] }))
-            ]});
+            new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(row.factor||'—'),bold:isTot,size:17})]})] }),
+            ...years.map((y,ci) => new TableCell({ width:{size:ci<years.length-1?dataPct:lastDataPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:row[y]!==undefined?new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(row[y]):'—',bold:isTot,size:17})]})] }))
+          ]});
         })
       ]
     });
@@ -647,8 +681,8 @@ function createFinancialSummarySection(plKpi, bsKpi) {
     const plTable = makeFinTable(plData, 'Income Statement  (₹ in Lakhs)');
     if (plTable) {
       blocks.push(
-          makeKpiBlock(plKpi, [new Paragraph({}), plTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
-          new Paragraph({})
+        makeKpiBlock(plKpi, [new Paragraph({}), plTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
+        new Paragraph({})
       );
     }
   }
@@ -657,8 +691,8 @@ function createFinancialSummarySection(plKpi, bsKpi) {
     const bsTable = makeFinTable(bsData, 'Balance Sheet  (₹ in Lakhs)');
     if (bsTable) {
       blocks.push(
-          makeKpiBlock(bsKpi, [new Paragraph({}), bsTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
-          new Paragraph({})
+        makeKpiBlock(bsKpi, [new Paragraph({}), bsTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
+        new Paragraph({})
       );
     }
   }
@@ -681,13 +715,13 @@ function makeChartDataTable(kpiRows) {
     width: { size: 100, type: WidthType.PERCENTAGE }, borders: allBorders,
     rows: [
       new TableRow({ cantSplit: true, children: [
-          new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:C.grey,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Particulars',bold:true,color:C.white,size:17})]})] }),
-          ...years.map((y,i) => new TableCell({ width:{size:i<years.length-1?dataPct:lastDPct,type:WidthType.PERCENTAGE}, shading:{fill:C.grey,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:y,bold:true,color:C.white,size:17})]})] }))
-        ]}),
+        new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:C.grey,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Particulars',bold:true,color:C.white,size:17})]})] }),
+        ...years.map((y,i) => new TableCell({ width:{size:i<years.length-1?dataPct:lastDPct,type:WidthType.PERCENTAGE}, shading:{fill:C.grey,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:y,bold:true,color:C.white,size:17})]})] }))
+      ]}),
       ...kpiRows.map((row,i) => new TableRow({ children: [
-          new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(row[factorKey]??'—'),size:17})]})] }),
-          ...years.map((y,ci) => new TableCell({ width:{size:ci<years.length-1?dataPct:lastDPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:row[y]!==undefined?(typeof row[y]==='number'?new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(row[y]):String(row[y])):'—',size:17})]})] }))
-        ]}))
+        new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(row[factorKey]??'—'),size:17})]})] }),
+        ...years.map((y,ci) => new TableCell({ width:{size:ci<years.length-1?dataPct:lastDPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:row[y]!==undefined?(typeof row[y]==='number'?new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(row[y]):String(row[y])):'—',size:17})]})] }))
+      ]}))
     ]
   });
 }
@@ -697,10 +731,10 @@ const subBanner = (label) => new Table({
   width: { size: TBL_W, type: WidthType.DXA }, columnWidths: [TBL_W],
   borders: noBorders,
   rows: [new TableRow({ cantSplit: true, children: [new TableCell({
-      shading: { fill: C.yellow, type: ShadingType.CLEAR }, borders: noBorders,
-      margins: { top:75, bottom:75, left:150, right:80 },
-      children: [new Paragraph({ keepNext: true, children: [new TextRun({ text: safeText(label), bold: true, size: 20, color: '2E2E38' })] })]
-    })]})]
+    shading: { fill: C.yellow, type: ShadingType.CLEAR }, borders: noBorders,
+    margins: { top:75, bottom:75, left:150, right:80 },
+    children: [new Paragraph({ keepNext: true, children: [new TextRun({ text: safeText(label), bold: true, size: 20, color: '2E2E38' })] })]
+  })]})]
 });
 
 // ─── Grey section-only banner (for financial section headers) ─────────────────
@@ -708,10 +742,10 @@ const sectionOnlyBanner = (label) => new Table({
   width: { size: TBL_W, type: WidthType.DXA }, columnWidths: [TBL_W],
   borders: noBorders,
   rows: [new TableRow({ cantSplit: true, children: [new TableCell({
-      shading: { fill: C.grey, type: ShadingType.CLEAR }, borders: noBorders,
-      margins: { top:90, bottom:90, left:150, right:80 },
-      children: [new Paragraph({ keepNext: true, children: [new TextRun({ text: safeText(label), bold: true, size: 22, color: C.white })] })]
-    })]})]
+    shading: { fill: C.grey, type: ShadingType.CLEAR }, borders: noBorders,
+    margins: { top:90, bottom:90, left:150, right:80 },
+    children: [new Paragraph({ keepNext: true, children: [new TextRun({ text: safeText(label), bold: true, size: 22, color: C.white })] })]
+  })]})]
 });
 
 // ─── Combined section-banner + KPI-header (ONE table, prevents orphaning) ────
@@ -720,24 +754,24 @@ function makeSectionKpiHeader(sectionTitle, kpi) {
   const kpiHeaderTable = new Table({
     width: { size: TBL_W, type: WidthType.DXA }, columnWidths: COL, borders: allBorders,
     rows: [new TableRow({ cantSplit: true, children: [
-        mkCell('Name & Relation', { bg: C.navy, color: C.white, bold: true,  widthDxa: COL[0] }),
-        mkCell(kpi.kpi_definition, { bg: C.offWhite, align: AlignmentType.CENTER, widthDxa: COL[1] }),
-        mkCell('Rating',           { bg: C.navy, color: C.white, bold: true, align: AlignmentType.CENTER, widthDxa: COL[2] }),
-        mkCell(kpi.kpi_rating,     { bg: ratingStyle(kpi.kpi_rating).background, color: ratingStyle(kpi.kpi_rating).color, bold: true, align: AlignmentType.CENTER, widthDxa: COL[3] }),
-      ]})]
+      mkCell('Name & Relation', { bg: C.navy, color: C.white, bold: true,  widthDxa: COL[0] }),
+      mkCell(kpi.kpi_definition, { bg: C.offWhite, align: AlignmentType.CENTER, widthDxa: COL[1] }),
+      mkCell('Rating',           { bg: C.navy, color: C.white, bold: true, align: AlignmentType.CENTER, widthDxa: COL[2] }),
+      mkCell(kpi.kpi_rating,     { bg: ratingStyle(kpi.kpi_rating).background, color: ratingStyle(kpi.kpi_rating).color, bold: true, align: AlignmentType.CENTER, widthDxa: COL[3] }),
+    ]})]
   });
   return new Table({
     width: { size: TBL_W, type: WidthType.DXA }, columnWidths: [TBL_W],
     borders: allBorders,
     rows: [new TableRow({ cantSplit: true, children: [new TableCell({
-        shading: { fill: C.white, type: ShadingType.CLEAR }, borders: allBorders,
-        margins: { top: 0, bottom: 0, left: 0, right: 0 },
-        children: [
-          new Paragraph({ shading: { fill: C.grey, type: ShadingType.CLEAR }, indent: { left: 150, right: 80 }, spacing: { before: 0, after: 0 },
-            children: [new TextRun({ text: safeText(sectionTitle), bold: true, size: 22, color: C.white })] }),
-          kpiHeaderTable
-        ]
-      })]})]  });
+      shading: { fill: C.white, type: ShadingType.CLEAR }, borders: allBorders,
+      margins: { top: 0, bottom: 0, left: 0, right: 0 },
+      children: [
+        new Paragraph({ shading: { fill: C.grey, type: ShadingType.CLEAR }, indent: { left: 150, right: 80 }, spacing: { before: 0, after: 0 },
+          children: [new TextRun({ text: safeText(sectionTitle), bold: true, size: 22, color: C.white })] }),
+        kpiHeaderTable
+      ]
+    })]})]  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -768,55 +802,54 @@ function createFinancialChartSection(kpi, sectionTitle, chartsForKpi) {
   };
 
   const configs = CHART_CONFIGS[kpi.kpi_code] || [];
+  const sectionHeader = makeSectionKpiHeader(sectionTitle, kpi);
+  const elements = [];
 
-  // Combined header (sectionBanner + kpiHeader) in one table to prevent orphaning
-  const elements = [makeSectionKpiHeader(sectionTitle, kpi), new Paragraph({})];
+  // Wrap each chart (sub-banner + image + data table) in a single cantSplit table.
+  // For the FIRST chart, include the sectionHeader inside the same cell so the
+  // section title (e.g. "Profitability Analysis") always travels with its chart.
+  configs.forEach(({ key, label, w, h, filter }, i) => {
+    const buf  = chartsForKpi[key];
+    const rows = filter ? filter(kpiRows) : kpiRows;
+    const dt   = makeChartDataTable(rows);
 
-  for (const { key, label, w, h, filter } of configs) {
-    const buf   = chartsForKpi[key];
-    const rows  = filter ? filter(kpiRows) : kpiRows;
-    const dt    = makeChartDataTable(rows);
-
-    // Wrap subBanner + chart image + data table in ONE single-cell table
-    // so Word treats them as one indivisible block and never splits them
-    // across a page boundary.
-    // ONE row, ONE cell — everything (sub-banner + image + data table) in the
-    // same cell. cantSplit on the row then genuinely prevents any page break
-    // within this block. Multiple rows with cantSplit don't work because
-    // cantSplit only prevents splitting WITHIN a row, not BETWEEN rows.
-    elements.push(new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      columnWidths: [TBL_W],
-      borders: noBorders,
-      rows: [new TableRow({
-        cantSplit: true,
-        children: [new TableCell({
-          shading: { fill: C.white, type: ShadingType.CLEAR },
-          borders: noBorders,
-          margins: { top: 0, bottom: 0, left: 0, right: 0 },
-          children: [
-            // Yellow sub-banner as a shaded paragraph (no nested table needed)
-            new Paragraph({
-              shading: { fill: C.yellow, type: ShadingType.CLEAR },
-              spacing: { before: 0, after: 0 },
-              indent: { left: 150, right: 80 },
-              children: [new TextRun({ text: safeText(label), bold: true, size: 20, color: '2E2E38' })]
-            }),
-            // Chart image
-            new Paragraph({
-              spacing: { before: 80, after: 80 },
-              children: buf
+    elements.push(
+      new Table({
+        width: { size: TBL_W, type: WidthType.DXA },
+        columnWidths: [TBL_W],
+        borders: noBorders,
+        rows: [new TableRow({
+          cantSplit: true,
+          children: [new TableCell({
+            shading: { fill: C.white, type: ShadingType.CLEAR },
+            borders: noBorders,
+            margins: { top: 0, bottom: 0, left: 0, right: 0 },
+            children: [
+              // First chart carries the section KPI header inside the same block
+              ...(i === 0 ? [sectionHeader, new Paragraph({})] : []),
+              // Yellow sub-banner
+              new Paragraph({
+                shading: { fill: C.yellow, type: ShadingType.CLEAR },
+                spacing: { before: 0, after: 0 },
+                indent: { left: 150, right: 80 },
+                children: [new TextRun({ text: safeText(label), bold: true, size: 20, color: '2E2E38' })]
+              }),
+              // Chart image
+              new Paragraph({
+                spacing: { before: 80, after: 80 },
+                children: buf
                   ? [new ImageRun({ data: buf, type: 'png', transformation: { width: w, height: h } })]
                   : [new TextRun({ text: '[Chart unavailable]', italics: true, color: '999999' })]
-            }),
-            // Data table (nested, if present)
-            ...(dt ? [dt] : [])
-          ]
+              }),
+              // Data table
+              ...(dt ? [dt] : [])
+            ]
+          })]
         })]
-      })]
-    }));
-    elements.push(new Paragraph({}));
-  }
+      }),
+      new Paragraph({})
+    );
+  });
 
   elements.push(sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({}));
   return elements;
@@ -848,6 +881,111 @@ function createFinancialFindingsSection(financialData) {
     if (!rendered.has(kpi.kpi_code)) result.push(...createRelationTable(kpi));
   }
   return result;
+}
+
+// ─── Executive Summary (OpenAI) ────────────────────────────────────────────────
+// Builds a compact 5-6 line narrative summary of the report's key findings.
+// Scoped to fail SAFE: any error (missing key, network, bad response) logs a
+// warning and returns a neutral fallback line so report generation never breaks.
+function buildExecutiveSummaryPrompt(data, payload) {
+  const lines = [];
+  lines.push(`Company: ${data.name || 'N/A'}`);
+  if (data.category) lines.push(`Category: ${data.category}`);
+  if (data.location)  lines.push(`Location: ${data.location}`);
+  lines.push(`Overall Risk Rating: ${data.risk_level || 'N/A'}`);
+
+  if (Array.isArray(data.riskData)) {
+    lines.push('Risk Areas:');
+    data.riskData.forEach(r => lines.push(`- ${r.area}: ${r.rating}`));
+  }
+
+  // Lightweight counts of flagged findings per section (no raw finding text sent)
+  const countFlags = (arr) => Array.isArray(arr) ? arr.filter(k => k?.kpi_flag).length : 0;
+  const sectionCounts = [
+    payload.legal_findings           && [`Legal findings flagged: ${countFlags(data.legal_data)}`],
+    payload.financial_findings       && [`Financial findings flagged: ${countFlags(data.financial_data)}`],
+    payload.cyber_esg_findings       && [`Cyber/ESG findings flagged: ${countFlags(data.cyber_esg_data)}`],
+    payload.adverse_media_findings   && [`Adverse media findings flagged: ${countFlags(data.adverse_media_data)}`],
+    payload.entity_existence_findings&& [`Entity existence findings flagged: ${countFlags(data.entity_existence_data)}`],
+  ].filter(Boolean).flat();
+
+  if (sectionCounts.length) lines.push(...sectionCounts);
+
+  return [
+    'You are a due-diligence analyst writing a formal Executive Summary for a vendor/supplier risk report.',
+    'Using ONLY the structured data below, write a concise executive summary of exactly 5 to 6 sentences.',
+    'Cover: overall risk posture, the most material risk area(s), and any notably clean areas.',
+    'Do not invent facts not present in the data. Plain prose, no headers, no bullet points, no markdown.',
+    '',
+    lines.join('\n'),
+  ].join('\n');
+}
+
+async function generateExecutiveSummary(data, payload) {
+  if (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_API_KEY || !AZURE_OPENAI_DEPLOYMENT) {
+    console.warn('⚠️  AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_API_KEY / AZURE_OPENAI_DEPLOYMENT not fully set — skipping executive summary generation');
+    return null;
+  }
+  try {
+    const prompt = buildExecutiveSummaryPrompt(data, payload);
+    const endpoint = AZURE_OPENAI_ENDPOINT.replace(/\/+$/, ''); // strip trailing slash if present
+    const url = `${endpoint}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${AZURE_API_VERSION}`;
+
+    let body = {
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_completion_tokens: 800, // reasoning models (gpt-5, o1, o3...) spend tokens on hidden
+                                  // reasoning before the visible answer, so this needs real headroom
+      reasoning_effort: 'low',   // keep reasoning light — this is a short summary, not a hard problem
+    };
+
+    let response;
+    try {
+      response = await axios.post(url, body, {
+        headers: { 'api-key': AZURE_OPENAI_API_KEY, 'Content-Type': 'application/json' },
+        timeout: 20000,
+      });
+    } catch (firstErr) {
+      // Reasoning-family models (gpt-5, o1, o3...) reject some params outright
+      // (e.g. non-default temperature, max_tokens vs max_completion_tokens).
+      // Error codes vary ('unsupported_parameter', 'unsupported_value', etc.) —
+      // match on the presence of a named `param` instead of a specific code,
+      // and loop in case more than one param gets rejected in sequence.
+      let err = firstErr;
+      let attempts = 0;
+      while (attempts < 3) {
+        const badParam = err?.response?.data?.error?.param;
+        if (!badParam || body[badParam] === undefined) throw err;
+        console.warn(`⚠️  Model rejected '${badParam}' (${err?.response?.data?.error?.message || 'no detail'}) — retrying without it`);
+        const { [badParam]: _drop, ...retryBody } = body;
+        body = retryBody;
+        attempts++;
+        try {
+          response = await axios.post(url, body, {
+            headers: { 'api-key': AZURE_OPENAI_API_KEY, 'Content-Type': 'application/json' },
+            timeout: 20000,
+          });
+          break;
+        } catch (retryErr) {
+          err = retryErr;
+          if (attempts === 3) throw err;
+        }
+      }
+    }
+    const summary = response.data?.choices?.[0]?.message?.content?.trim();
+    if (!summary) {
+      const finishReason = response.data?.choices?.[0]?.finish_reason;
+      if (finishReason === 'length') {
+        throw new Error('Model ran out of tokens on reasoning before producing an answer — increase max_completion_tokens');
+      }
+      throw new Error('Empty summary content from Azure OpenAI response');
+    }
+    console.log('✅ Executive summary generated');
+    return summary;
+  } catch (err) {
+    console.error('⚠️  Executive summary generation failed:', err?.response?.data?.error?.message || err.message);
+    return null;
+  }
 }
 
 // ─── Address validation images ────────────────────────────────────────────────
@@ -980,18 +1118,18 @@ function directorNetworkTable(info, directors) {
 function annexureTable(info) {
   // Title row (shared for all variants)
   const titleRow = new TableRow({ cantSplit: true, children: [new TableCell({
-      shading:{fill:C.offWhite,type:ShadingType.CLEAR}, borders:allBorders,
-      margins:{top:70,bottom:70,left:110,right:110}, columnSpan: 1,
-      children:[new Paragraph({keepNext:true,children:[new TextRun({text:safeText(info.title),bold:true,size:20})]})]
-    })] });
+    shading:{fill:C.offWhite,type:ShadingType.CLEAR}, borders:allBorders,
+    margins:{top:70,bottom:70,left:110,right:110}, columnSpan: 1,
+    children:[new Paragraph({keepNext:true,children:[new TextRun({text:safeText(info.title),bold:true,size:20})]})]
+  })] });
 
   const rawContents = info.contents;
 
   // Detect director network: title contains "Director Network" AND contents is a
   // parseable list of { "Director Name", "DIN", "Network" } objects (or Python-list string)
   const directorNetworkRows = /director\s*network/i.test(info.title)
-      ? (Array.isArray(rawContents) ? rawContents : tryParseLegalList(String(rawContents ?? '')))
-      : null;
+    ? (Array.isArray(rawContents) ? rawContents : tryParseLegalList(String(rawContents ?? '')))
+    : null;
 
   if (directorNetworkRows && directorNetworkRows.length > 0) {
     return directorNetworkTable(info, directorNetworkRows);
@@ -1000,8 +1138,8 @@ function annexureTable(info) {
   // Detect legal history: title contains "Legal" AND contents is a parseable list
   // contents may arrive as a plain string, a Python-list string, or a real JS array
   const legalCases = /legal/i.test(info.title)
-      ? (Array.isArray(rawContents)
-          ? rawContents.map((item, idx) => ({
+    ? (Array.isArray(rawContents)
+        ? rawContents.map((item, idx) => ({
             no:          String(idx + 1),
             date:        item.date ?? '—',
             severity:    (item.severity ?? '').toLowerCase(),
@@ -1010,8 +1148,8 @@ function annexureTable(info) {
             category:    item.category ?? '—',
             description: item.Description ?? item.description ?? '—',
           }))
-          : tryParseLegalList(String(rawContents ?? '')))
-      : null;
+        : tryParseLegalList(String(rawContents ?? '')))
+    : null;
 
   if (legalCases && legalCases.length > 0) {
     // Render as full coloured legal table (same column layout as main legal section)
@@ -1024,27 +1162,27 @@ function annexureTable(info) {
     ];
 
     const headerRow = new TableRow({ cantSplit: true, children: LABELS.map((l,i) =>
-          new TableCell({
-            width:{size:LCOLS[i],type:WidthType.DXA},
-            shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders,
-            margins:{top:60,bottom:60,left:80,right:80},
-            children:[new Paragraph({alignment:ALIGNS[i],children:[new TextRun({text:l,bold:true,color:C.white,size:17})]})]
-          })
-      )});
+      new TableCell({
+        width:{size:LCOLS[i],type:WidthType.DXA},
+        shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders,
+        margins:{top:60,bottom:60,left:80,right:80},
+        children:[new Paragraph({alignment:ALIGNS[i],children:[new TextRun({text:l,bold:true,color:C.white,size:17})]})]
+      })
+    )});
 
     const dataRows = legalCases.map((c, i) => {
       const sev = sevStyle(c.severity);
       const sta = stStyle(c.status);
       const bg  = i%2===0 ? C.offWhite : C.white;
       return new TableRow({ children: [
-          new TableCell({width:{size:LCOLS[0],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(String(c.no)),size:17})]})]}),
-          new TableCell({width:{size:LCOLS[1],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(c.date),size:17})]})]}),
-          new TableCell({width:{size:LCOLS[2],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.caseNo),size:17})]})]}),
-          new TableCell({width:{size:LCOLS[3],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.description),size:15})]})]}),
-          new TableCell({width:{size:LCOLS[4],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.category),size:17})]})]}),
-          new TableCell({width:{size:LCOLS[5],type:WidthType.PERCENTAGE},shading:{fill:sev.bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:cap(c.severity),bold:true,color:sev.fg,size:17})]})]}),
-          new TableCell({width:{size:LCOLS[6],type:WidthType.PERCENTAGE},shading:{fill:sta.bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:cap(c.status),bold:true,color:sta.fg,size:17})]})]})
-        ]});
+        new TableCell({width:{size:LCOLS[0],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(String(c.no)),size:17})]})]}),
+        new TableCell({width:{size:LCOLS[1],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(c.date),size:17})]})]}),
+        new TableCell({width:{size:LCOLS[2],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.caseNo),size:17})]})]}),
+        new TableCell({width:{size:LCOLS[3],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.description),size:15})]})]}),
+        new TableCell({width:{size:LCOLS[4],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.category),size:17})]})]}),
+        new TableCell({width:{size:LCOLS[5],type:WidthType.PERCENTAGE},shading:{fill:sev.bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:cap(c.severity),bold:true,color:sev.fg,size:17})]})]}),
+        new TableCell({width:{size:LCOLS[6],type:WidthType.PERCENTAGE},shading:{fill:sta.bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:cap(c.status),bold:true,color:sta.fg,size:17})]})]})
+      ]});
     });
 
     return [
@@ -1072,13 +1210,13 @@ function annexureTable(info) {
       rows: [
         titleRow,
         new TableRow({ children: [new TableCell({
-            shading:{fill:C.white,type:ShadingType.CLEAR}, borders:allBorders,
-            margins:{top:60,bottom:60,left:110,right:110},
-            children:[
-              ...String(rawContents ?? '').trim().split(/\n+/).map(t=>new Paragraph({children:[new TextRun({text:safeText(t),size:18,break:1})]})),
-              new Paragraph({})
-            ]
-          })]  })
+          shading:{fill:C.white,type:ShadingType.CLEAR}, borders:allBorders,
+          margins:{top:60,bottom:60,left:110,right:110},
+          children:[
+            ...String(rawContents ?? '').trim().split(/\n+/).map(t=>new Paragraph({children:[new TextRun({text:safeText(t),size:18,break:1})]})),
+            new Paragraph({})
+          ]
+        })]  })
       ]
     }),
     new Paragraph({})
@@ -1087,7 +1225,7 @@ function annexureTable(info) {
 
 // ─── URL helpers ──────────────────────────────────────────────────────────────
 const processKpiDetails = (f) => (f.kpi_details?.trim().split(/\n+/)??[])
-    .map(t=>t.match(/(https?:\/\/[^\s]+)/)?.[0]??null).filter(Boolean);
+  .map(t=>t.match(/(https?:\/\/[^\s]+)/)?.[0]??null).filter(Boolean);
 
 const getPageTitle = async (url) => {
   try {
@@ -1127,6 +1265,10 @@ export const generateReport = async (payload) => {
       console.log('✅ Charts:', Object.keys(chartBuffers).join(', '));
     }
 
+    // Executive summary (OpenAI) — generated once, reused in the patch below
+    console.log('⏳ Generating executive summary…');
+    const executiveSummaryText = await generateExecutiveSummary(data, payload);
+
     if (disableReg) template = 'aramco_template-no-regulatory-legal.docx';
     const TEMPLATE_PATH = path.join(__dirname, '..', 'template', template);
     const date = new Date(); const day = date.getDate();
@@ -1140,10 +1282,10 @@ export const generateReport = async (payload) => {
         uploadedName: createTextRun({ text:`[${data.uploaded_name}]` }),
         title:        createTextRun({ text: data.name }),
         created_date: { type:PatchType.PARAGRAPH, children:[
-            new TextRun({text:`${day}`}),
-            new TextRun({text:getOrdinalSuffix(day),superScript:true}),
-            new TextRun({text:` ${date.toLocaleString('en-US',{month:'long'})} ${date.getFullYear()}`}),
-          ]},
+          new TextRun({text:`${day}`}),
+          new TextRun({text:getOrdinalSuffix(day),superScript:true}),
+          new TextRun({text:` ${date.toLocaleString('en-US',{month:'long'})} ${date.getFullYear()}`}),
+        ]},
         // Profile
         company_name:               createTextRun({text:data.name}),
         company_location:           createTextRun({text:data.location}),
@@ -1152,10 +1294,10 @@ export const generateReport = async (payload) => {
         company_uploaded_name:      createTextRun({text:data.uploaded_name}),
         company_external_vendor_id: createTextRun({text:data.external_vendor_id}),
         company_website: { type:PatchType.DOCUMENT, children:[new Paragraph({children:[
-              isValidURL(data.website)
-                  ? new ExternalHyperlink({children:[new TextRun({text:data.website,style:'Hyperlink'})],link:formatHttpsURL(data.website)})
-                  : new TextRun({text:data.website})
-            ]})]},
+          isValidURL(data.website)
+            ? new ExternalHyperlink({children:[new TextRun({text:data.website,style:'Hyperlink'})],link:formatHttpsURL(data.website)})
+            : new TextRun({text:data.website})
+        ]})]},
         company_e_filing_status:    createTextRun({text:data.e_filing_status}),
         company_category_type:      createTextRun({text:data.category}),
         company_national_identifier:createTextRun({text:data.identifier}),
@@ -1168,31 +1310,43 @@ export const generateReport = async (payload) => {
         company_revenue:  createTextRun({text:data.revenue}),
         company_employee: createTextRun({text:data.employee_count}),
 
+        // Executive Summary (grey banner + AI-generated narrative, shown after
+        // Company Profile and before Overall Risk Rating)
+        executive_summary: { type:PatchType.DOCUMENT, children:[
+          sectionOnlyBanner('Executive Summary'),
+          new Paragraph({}),
+          new Paragraph({ children:[new TextRun({
+            text: executiveSummaryText || 'Executive summary unavailable for this report.',
+            size: 20,
+          })] }),
+          new Paragraph({}),
+        ]},
+
         // Overall rating (navy header + coloured value)
         overall_rating: { type:PatchType.DOCUMENT, children:[new Table({
-            columnWidths:[7000,3000], width:{size:10000,type:WidthType.DXA}, alignment:'center',
-            rows:[new TableRow({ height:{rule:'atLeast',value:560}, children:[
-                new TableCell({ verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, width:{size:7000,type:WidthType.DXA}, margins:{top:90,bottom:90,left:160,right:160},
-                  children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'OVERALL RISK RATING',bold:true,size:26,color:C.white})]})] }),
-                new TableCell({ verticalAlign:'center', shading:{fill:getRiskColor(data.risk_level).background,type:ShadingType.CLEAR}, borders:allBorders, width:{size:3000,type:WidthType.DXA}, margins:{top:90,bottom:90,left:160,right:160},
-                  children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:data.risk_level,bold:true,size:28,color:getRiskColor(data.risk_level).color,allCaps:true})]})] }),
-              ]})]
-          })]},
+          columnWidths:[7000,3000], width:{size:10000,type:WidthType.DXA}, alignment:'center',
+          rows:[new TableRow({ height:{rule:'atLeast',value:560}, children:[
+            new TableCell({ verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, width:{size:7000,type:WidthType.DXA}, margins:{top:90,bottom:90,left:160,right:160},
+              children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'OVERALL RISK RATING',bold:true,size:26,color:C.white})]})] }),
+            new TableCell({ verticalAlign:'center', shading:{fill:getRiskColor(data.risk_level).background,type:ShadingType.CLEAR}, borders:allBorders, width:{size:3000,type:WidthType.DXA}, margins:{top:90,bottom:90,left:160,right:160},
+              children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:data.risk_level,bold:true,size:28,color:getRiskColor(data.risk_level).color,allCaps:true})]})] }),
+          ]})]
+        })]},
 
         // Risk areas (navy header, alternating rows, coloured ratings)
         risk_areas: { type:PatchType.DOCUMENT, children:[new Table({
-            columnWidths:[7400,2600], width:{size:10000,type:WidthType.DXA}, borders:allBorders,
-            rows:[
-              new TableRow({ height:{rule:'atLeast',value:560}, children:[
-                  new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:160,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Areas',bold:true,color:C.white,size:20})]})] }),
-                  new TableCell({ verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Rating',bold:true,color:C.white,size:20})]})] }),
-                ]}),
-              ...data.riskData.map((risk,i)=>new TableRow({ height:{rule:'atLeast',value:480}, children:[
-                  new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:70,bottom:70,left:160,right:120}, children:[new Paragraph({children:[new TextRun({text:risk.area,size:19})]})] }),
-                  new TableCell({ verticalAlign:'center', shading:{fill:getRiskColor(risk.rating).background,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:70,bottom:70,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:risk.rating,color:getRiskColor(risk.rating).color,size:20,bold:true})]})] }),
-                ]}))
-            ]
-          })]},
+          columnWidths:[7400,2600], width:{size:10000,type:WidthType.DXA}, borders:allBorders,
+          rows:[
+            new TableRow({ height:{rule:'atLeast',value:560}, children:[
+              new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:160,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Areas',bold:true,color:C.white,size:20})]})] }),
+              new TableCell({ verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Rating',bold:true,color:C.white,size:20})]})] }),
+            ]}),
+            ...data.riskData.map((risk,i)=>new TableRow({ height:{rule:'atLeast',value:480}, children:[
+              new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:70,bottom:70,left:160,right:120}, children:[new Paragraph({children:[new TextRun({text:risk.area,size:19})]})] }),
+              new TableCell({ verticalAlign:'center', shading:{fill:getRiskColor(risk.rating).background,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:70,bottom:70,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:risk.rating,color:getRiskColor(risk.rating).color,size:20,bold:true})]})] }),
+            ]}))
+          ]
+        })]},
 
         a_rating: highlightRating(data.riskData[0].rating),
         b_rating: highlightRating(data.riskData[1].rating),
@@ -1210,27 +1364,27 @@ export const generateReport = async (payload) => {
 
         legal_findings: { type:PatchType.DOCUMENT,
           children: payload.legal_findings
-              ? data.legal_data.map(f => (f.kpi_code==='LEG1A'||/legal history/i.test(f.kpi_definition||''))
-                  ? createLegalHistoryTable(f) : createRelationTable(f)).flat()
-              : createNoHitsTable('LEGAL')
+            ? data.legal_data.map(f => (f.kpi_code==='LEG1A'||/legal history/i.test(f.kpi_definition||''))
+                ? createLegalHistoryTable(f) : createRelationTable(f)).flat()
+            : createNoHitsTable('LEGAL')
         },
 
         financial_findings: { type:PatchType.DOCUMENT,
           children: payload.financial_findings && data.financial_data?.length
-              ? createFinancialFindingsSection(data.financial_data)
-              : createNoHitsTable('FINANCIALS')
+            ? createFinancialFindingsSection(data.financial_data)
+            : createNoHitsTable('FINANCIALS')
         },
 
         cyber_esg_findings: { type:PatchType.DOCUMENT,
           children: payload.cyber_esg_findings
-              ? data.cyber_esg_data.map(createRelationTable).flat()
-              : createNoHitsTable('CYBER')
+            ? data.cyber_esg_data.map(createRelationTable).flat()
+            : createNoHitsTable('CYBER')
         },
 
         adverse_media_findings: { type:PatchType.DOCUMENT,
           children: payload.adverse_media_findings
-              ? data.adverse_media_data.map(createFindingsTable).flat()
-              : createNoHitsTable('ADVERSE MEDIA')
+            ? data.adverse_media_data.map(createFindingsTable).flat()
+            : createNoHitsTable('ADVERSE MEDIA')
         },
 
         entity_existence_findings: { type:PatchType.DOCUMENT,
