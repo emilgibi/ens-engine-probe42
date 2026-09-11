@@ -348,11 +348,7 @@ function makeJsonTable(data) {
           new TableCell({ width:{size:fvW[0],type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Parameter',bold:true,color:C.white,size:18})]})] }),
           new TableCell({ width:{size:fvW[1],type:WidthType.PERCENTAGE}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Value',bold:true,color:C.white,size:18})]})] }),
         ]}),
-<<<<<<< HEAD
         ...fvRows.map((r, i) => new TableRow({ cantSplit: true, children: [
-=======
-        ...fvRows.map((r, i) => new TableRow({ children: [
->>>>>>> 94340ae (business changes required)
           new TableCell({ width:{size:fvW[0],type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(r.factor),bold:true,size:17})]})] }),
           new TableCell({ width:{size:fvW[1],type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children: renderVal(r.value) }),
         ]}))
@@ -387,11 +383,7 @@ function makeJsonTable(data) {
           children: [new Paragraph({ children: [new TextRun({ text: toTitle(c), bold: true, color: C.white, size: 18 })] })]
         })
       )}),
-<<<<<<< HEAD
       ...rows.map((r, i) => new TableRow({ cantSplit: true, children: cols.map((c, ci) =>
-=======
-      ...rows.map((r, i) => new TableRow({ children: cols.map((c, ci) =>
->>>>>>> 94340ae (business changes required)
         new TableCell({
           width: { size: ci < cols.length-1 ? cw : lastCw, type: WidthType.PERCENTAGE },
           shading: { fill: i%2===0 ? C.offWhite : C.white, type: ShadingType.CLEAR },
@@ -518,11 +510,7 @@ function createLegalHistoryTable(findings) {
                     new TextRun({ text: safeText(String(txt)), bold: override.bold ?? false, color: override.fg ?? '000000', size: 17 })
                   ]})]
                 });
-<<<<<<< HEAD
                 return new TableRow({ cantSplit: true, children: [
-=======
-                return new TableRow({ children: [
->>>>>>> 94340ae (business changes required)
                   cell(c.no,           0),
                   cell(c.date,         1),
                   cell(c.caseNo,       2),
@@ -738,16 +726,9 @@ function reorderEpfoRows(rows) {
 //  RELATION TABLE — JSON or text-based KPIs
 // ═══════════════════════════════════════════════════════════════════════════════
 function createRelationTable(findings) {
-<<<<<<< HEAD
   if (findings?.kpi_code === 'FSTB13A') return createEpfoTable(findings);
 
   let parsed = tryParseJson(findings?.kpi_details);
-=======
-  let parsed = tryParseJson(findings?.kpi_details);
-  if (findings?.kpi_code === 'FSTB13A' && Array.isArray(parsed)) {
-    parsed = reorderEpfoRows(parsed);
-  }
->>>>>>> 94340ae (business changes required)
   const jt     = parsed ? makeJsonTable(parsed) : null;
 
   const content = jt
@@ -780,11 +761,7 @@ function createFindingsInnerTable(findings) {
           new TableCell({ width:{size:iCols[2],type:WidthType.DXA}, shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110},
             children:[new Paragraph({children:[new TextRun({text:'Notes',bold:true,color:C.white,size:18})]})] }),
         ]}),
-<<<<<<< HEAD
         ...items.map((item,i) => new TableRow({ cantSplit: true, children: [
-=======
-        ...items.map((item,i) => new TableRow({ children: [
->>>>>>> 94340ae (business changes required)
           new TableCell({ width:{size:iCols[0],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(item.kpi_definition),size:18})]})] }),
           new TableCell({ width:{size:iCols[1],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(item.kpi_rating),size:18})]})] }),
           new TableCell({ width:{size:iCols[2],type:WidthType.DXA}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(item.kpi_details),size:18})]})] }),
@@ -852,11 +829,7 @@ function createFinancialSummarySection(plKpi, bsKpi) {
         // Data rows
         ...rows.map((row, i) => {
           const isTot = (row.factor||'').toLowerCase().includes('total');
-<<<<<<< HEAD
           return new TableRow({ cantSplit: true, children: [
-=======
-          return new TableRow({ children: [
->>>>>>> 94340ae (business changes required)
             new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(row.factor||'—'),bold:isTot,size:17})]})] }),
             ...years.map((y,ci) => new TableCell({ width:{size:ci<years.length-1?dataPct:lastDataPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:row[y]!==undefined?new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(row[y]):'—',bold:isTot,size:17})]})] }))
           ]});
@@ -872,34 +845,20 @@ function createFinancialSummarySection(plKpi, bsKpi) {
   if (plKpi) {
     const plTable = makeFinTable(plData, 'Income Statement  (₹ in Lakhs)');
     if (plTable) {
-<<<<<<< HEAD
       chunks.push([
         ...makeKpiBlock(plKpi, [new Paragraph({}), plTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
         new Paragraph({})
       ]);
-=======
-      blocks.push(
-        makeKpiBlock(plKpi, [new Paragraph({}), plTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
-        new Paragraph({})
-      );
->>>>>>> 94340ae (business changes required)
     }
   }
 
   if (bsKpi) {
     const bsTable = makeFinTable(bsData, 'Balance Sheet  (₹ in Lakhs)');
     if (bsTable) {
-<<<<<<< HEAD
       chunks.push([
         ...makeKpiBlock(bsKpi, [new Paragraph({}), bsTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
         new Paragraph({})
       ]);
-=======
-      blocks.push(
-        makeKpiBlock(bsKpi, [new Paragraph({}), bsTable, new Paragraph({}), sourceLine('EY Network Alliance Databases / Annual Reports'), new Paragraph({})]),
-        new Paragraph({})
-      );
->>>>>>> 94340ae (business changes required)
     }
   }
 
@@ -924,11 +883,7 @@ function makeChartDataTable(kpiRows) {
         new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:C.grey,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:'Particulars',bold:true,color:C.white,size:17})]})] }),
         ...years.map((y,i) => new TableCell({ width:{size:i<years.length-1?dataPct:lastDPct,type:WidthType.PERCENTAGE}, shading:{fill:C.grey,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:60,bottom:60,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:y,bold:true,color:C.white,size:17})]})] }))
       ]}),
-<<<<<<< HEAD
       ...kpiRows.map((row,i) => new TableRow({ cantSplit: true, children: [
-=======
-      ...kpiRows.map((row,i) => new TableRow({ children: [
->>>>>>> 94340ae (business changes required)
         new TableCell({ width:{size:labelPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({children:[new TextRun({text:safeText(row[factorKey]??'—'),size:17})]})] }),
         ...years.map((y,ci) => new TableCell({ width:{size:ci<years.length-1?dataPct:lastDPct,type:WidthType.PERCENTAGE}, shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:55,bottom:55,left:110,right:110}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:row[y]!==undefined?(typeof row[y]==='number'?new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(row[y]):String(row[y])):'—',size:17})]})] }))
       ]}))
@@ -1092,111 +1047,6 @@ function createFinancialFindingsSection(financialData) {
   }
 
   return withPageBreaks(chunks);
-}
-
-// ─── Executive Summary (OpenAI) ────────────────────────────────────────────────
-// Builds a compact 5-6 line narrative summary of the report's key findings.
-// Scoped to fail SAFE: any error (missing key, network, bad response) logs a
-// warning and returns a neutral fallback line so report generation never breaks.
-function buildExecutiveSummaryPrompt(data, payload) {
-  const lines = [];
-  lines.push(`Company: ${data.name || 'N/A'}`);
-  if (data.category) lines.push(`Category: ${data.category}`);
-  if (data.location)  lines.push(`Location: ${data.location}`);
-  lines.push(`Overall Risk Rating: ${data.risk_level || 'N/A'}`);
-
-  if (Array.isArray(data.riskData)) {
-    lines.push('Risk Areas:');
-    data.riskData.forEach(r => lines.push(`- ${r.area}: ${r.rating}`));
-  }
-
-  // Lightweight counts of flagged findings per section (no raw finding text sent)
-  const countFlags = (arr) => Array.isArray(arr) ? arr.filter(k => k?.kpi_flag).length : 0;
-  const sectionCounts = [
-    payload.legal_findings           && [`Legal findings flagged: ${countFlags(data.legal_data)}`],
-    payload.financial_findings       && [`Financial findings flagged: ${countFlags(data.financial_data)}`],
-    payload.cyber_esg_findings       && [`Cyber/ESG findings flagged: ${countFlags(data.cyber_esg_data)}`],
-    payload.adverse_media_findings   && [`Adverse media findings flagged: ${countFlags(data.adverse_media_data)}`],
-    payload.entity_existence_findings&& [`Entity existence findings flagged: ${countFlags(data.entity_existence_data)}`],
-  ].filter(Boolean).flat();
-
-  if (sectionCounts.length) lines.push(...sectionCounts);
-
-  return [
-    'You are a due-diligence analyst writing a formal Executive Summary for a vendor/supplier risk report.',
-    'Using ONLY the structured data below, write a concise executive summary of exactly 5 to 6 sentences.',
-    'Cover: overall risk posture, the most material risk area(s), and any notably clean areas.',
-    'Do not invent facts not present in the data. Plain prose, no headers, no bullet points, no markdown.',
-    '',
-    lines.join('\n'),
-  ].join('\n');
-}
-
-async function generateExecutiveSummary(data, payload) {
-  if (!AZURE_OPENAI_ENDPOINT || !AZURE_OPENAI_API_KEY || !AZURE_OPENAI_DEPLOYMENT) {
-    console.warn('⚠️  AZURE_OPENAI_ENDPOINT / AZURE_OPENAI_API_KEY / AZURE_OPENAI_DEPLOYMENT not fully set — skipping executive summary generation');
-    return null;
-  }
-  try {
-    const prompt = buildExecutiveSummaryPrompt(data, payload);
-    const endpoint = AZURE_OPENAI_ENDPOINT.replace(/\/+$/, ''); // strip trailing slash if present
-    const url = `${endpoint}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=${AZURE_API_VERSION}`;
-
-    let body = {
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      max_completion_tokens: 800, // reasoning models (gpt-5, o1, o3...) spend tokens on hidden
-                                  // reasoning before the visible answer, so this needs real headroom
-      reasoning_effort: 'low',   // keep reasoning light — this is a short summary, not a hard problem
-    };
-
-    let response;
-    try {
-      response = await axios.post(url, body, {
-        headers: { 'api-key': AZURE_OPENAI_API_KEY, 'Content-Type': 'application/json' },
-        timeout: 20000,
-      });
-    } catch (firstErr) {
-      // Reasoning-family models (gpt-5, o1, o3...) reject some params outright
-      // (e.g. non-default temperature, max_tokens vs max_completion_tokens).
-      // Error codes vary ('unsupported_parameter', 'unsupported_value', etc.) —
-      // match on the presence of a named `param` instead of a specific code,
-      // and loop in case more than one param gets rejected in sequence.
-      let err = firstErr;
-      let attempts = 0;
-      while (attempts < 3) {
-        const badParam = err?.response?.data?.error?.param;
-        if (!badParam || body[badParam] === undefined) throw err;
-        console.warn(`⚠️  Model rejected '${badParam}' (${err?.response?.data?.error?.message || 'no detail'}) — retrying without it`);
-        const { [badParam]: _drop, ...retryBody } = body;
-        body = retryBody;
-        attempts++;
-        try {
-          response = await axios.post(url, body, {
-            headers: { 'api-key': AZURE_OPENAI_API_KEY, 'Content-Type': 'application/json' },
-            timeout: 20000,
-          });
-          break;
-        } catch (retryErr) {
-          err = retryErr;
-          if (attempts === 3) throw err;
-        }
-      }
-    }
-    const summary = response.data?.choices?.[0]?.message?.content?.trim();
-    if (!summary) {
-      const finishReason = response.data?.choices?.[0]?.finish_reason;
-      if (finishReason === 'length') {
-        throw new Error('Model ran out of tokens on reasoning before producing an answer — increase max_completion_tokens');
-      }
-      throw new Error('Empty summary content from Azure OpenAI response');
-    }
-    console.log('✅ Executive summary generated');
-    return summary;
-  } catch (err) {
-    console.error('⚠️  Executive summary generation failed:', err?.response?.data?.error?.message || err.message);
-    return null;
-  }
 }
 
 // ─── Executive Summary (OpenAI) ────────────────────────────────────────────────
@@ -1490,11 +1340,7 @@ function annexureTable(info) {
       const sev = sevStyle(c.severity);
       const sta = stStyle(c.status);
       const bg  = i%2===0 ? C.offWhite : C.white;
-<<<<<<< HEAD
       return new TableRow({ cantSplit: true, children: [
-=======
-      return new TableRow({ children: [
->>>>>>> 94340ae (business changes required)
         new TableCell({width:{size:LCOLS[0],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(String(c.no)),size:17})]})]}),
         new TableCell({width:{size:LCOLS[1],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:safeText(c.date),size:17})]})]}),
         new TableCell({width:{size:LCOLS[2],type:WidthType.PERCENTAGE},shading:{fill:bg,type:ShadingType.CLEAR},borders:allBorders,margins:{top:55,bottom:55,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:safeText(c.caseNo),size:17})]})]}),
@@ -1657,19 +1503,11 @@ export const generateReport = async (payload) => {
         risk_areas: { type:PatchType.DOCUMENT, children:[new Table({
           columnWidths:[7400,2600], width:{size:10000,type:WidthType.DXA}, borders:allBorders,
           rows:[
-<<<<<<< HEAD
             new TableRow({ cantSplit: true, height:{rule:'atLeast',value:560}, children:[
               new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:160,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Areas',bold:true,color:C.white,size:20})]})] }),
               new TableCell({ verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Rating',bold:true,color:C.white,size:20})]})] }),
             ]}),
             ...data.riskData.map((risk,i)=>new TableRow({ cantSplit: true, height:{rule:'atLeast',value:480}, children:[
-=======
-            new TableRow({ height:{rule:'atLeast',value:560}, children:[
-              new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:160,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Areas',bold:true,color:C.white,size:20})]})] }),
-              new TableCell({ verticalAlign:'center', shading:{fill:C.navy,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:90,bottom:90,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Risk Rating',bold:true,color:C.white,size:20})]})] }),
-            ]}),
-            ...data.riskData.map((risk,i)=>new TableRow({ height:{rule:'atLeast',value:480}, children:[
->>>>>>> 94340ae (business changes required)
               new TableCell({ width:{size:7400,type:WidthType.DXA}, verticalAlign:'center', shading:{fill:i%2===0?C.offWhite:C.white,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:70,bottom:70,left:160,right:120}, children:[new Paragraph({children:[new TextRun({text:risk.area,size:19})]})] }),
               new TableCell({ verticalAlign:'center', shading:{fill:getRiskColor(risk.rating).background,type:ShadingType.CLEAR}, borders:allBorders, margins:{top:70,bottom:70,left:120,right:120}, children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:risk.rating,color:getRiskColor(risk.rating).color,size:20,bold:true})]})] }),
             ]}))
@@ -1692,13 +1530,8 @@ export const generateReport = async (payload) => {
 
         legal_findings: { type:PatchType.DOCUMENT,
           children: payload.legal_findings
-<<<<<<< HEAD
             ? withPageBreaks(data.legal_data.map(f => (f.kpi_code==='LEG1A'||/legal history/i.test(f.kpi_definition||''))
                 ? createLegalHistoryTable(f) : createRelationTable(f)))
-=======
-            ? data.legal_data.map(f => (f.kpi_code==='LEG1A'||/legal history/i.test(f.kpi_definition||''))
-                ? createLegalHistoryTable(f) : createRelationTable(f)).flat()
->>>>>>> 94340ae (business changes required)
             : createNoHitsTable('LEGAL')
         },
 
@@ -1710,21 +1543,13 @@ export const generateReport = async (payload) => {
 
         cyber_esg_findings: { type:PatchType.DOCUMENT,
           children: payload.cyber_esg_findings
-<<<<<<< HEAD
             ? withPageBreaks(data.cyber_esg_data.map(createRelationTable))
-=======
-            ? data.cyber_esg_data.map(createRelationTable).flat()
->>>>>>> 94340ae (business changes required)
             : createNoHitsTable('CYBER')
         },
 
         adverse_media_findings: { type:PatchType.DOCUMENT,
           children: payload.adverse_media_findings
-<<<<<<< HEAD
             ? withPageBreaks(data.adverse_media_data.map(createFindingsTable))
-=======
-            ? data.adverse_media_data.map(createFindingsTable).flat()
->>>>>>> 94340ae (business changes required)
             : createNoHitsTable('ADVERSE MEDIA')
         },
 
